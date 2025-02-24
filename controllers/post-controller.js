@@ -1,8 +1,6 @@
 const schedule = require('node-schedule');
 const { prisma } = require("../prisma/prisma-client")
-const fs = require("fs");
-const path = require('path');
-const Jdenticon = require("jdenticon")
+
 
 const PostController = {
     createPost: async (req, res) => {
@@ -81,14 +79,14 @@ const PostController = {
 
                         }
                     },
-                   
+
                     savedBy: {
                         include: {
                             userSaved: true,
 
                         }
 
-                    } 
+                    }
 
 
                 },
@@ -96,16 +94,31 @@ const PostController = {
                     createdAt: 'desc'
                 }
             })
-            
-            const postWithLikeInto = posts.map(post => ({
-            post,    
 
-            }))
-           
 
-            
 
-            res.json(postWithLikeInto)
+            const postsWithLikeInfo = await Promise.all(
+                posts.map(async (post) => {
+                    const isSavedPost = await prisma.save.findFirst({
+                        where: {
+                            AND: [
+                                { userSavedId: userId },
+                                { savedPostId: post.id }
+                            ]
+                        }
+                    });
+
+                    return {
+                        ...post,
+                        isSavedPost: Boolean(isSavedPost)
+                    };
+                })
+            );
+
+
+
+
+            res.json(postsWithLikeInfo)
         } catch (err) {
             console.log(err, 'gat all posts error')
 
@@ -127,14 +140,14 @@ const PostController = {
 
                         }
                     },
-                    
-                    savedBy:{
+
+                    savedBy: {
                         include: {
                             userSaved: true,
 
                         }
 
-                    } ,
+                    },
                     followers: {
                         include: {
                             follower: true
@@ -173,7 +186,7 @@ const PostController = {
                 }
             })
 
-            res.json({ ...post, isFollowing: Boolean(isFollowing),  isSavedPost: Boolean(isSavedPost)})
+            res.json({ ...post, isFollowing: Boolean(isFollowing), isSavedPost: Boolean(isSavedPost) })
         } catch (err) {
             console.log(err, 'gat  posts by id error')
 
@@ -200,20 +213,20 @@ const PostController = {
                 prisma.follows.deleteMany({
                     where: {
                         OR: [
-                            { followerId: id },  
-                            { followingId: id }  
+                            { followerId: id },
+                            { followingId: id }
                         ]
                     }
                 }),
                 prisma.save.deleteMany({
                     where: {
                         OR: [
-                            { userSavedId: id },  
-                            {  savedPostId: id }  
+                            { userSavedId: id },
+                            { savedPostId: id }
                         ]
                     }
                 }),
-              
+
                 prisma.post.delete({ where: { id } })
             ])
             res.json(transaction)
