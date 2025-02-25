@@ -71,53 +71,7 @@ const UserController = {
 
         }
     },
-    getUserById: async (req, res) => {
-        const { id } = req.params;
-        const userId = req.user.userId
-
-        try {
-            const user = await prisma.user.findUnique({
-                where: {
-                    id
-                },
-                include: {
-                    posts: {
-                        include: {
-                            comments: true,
-                            author: true,
-                            followers: true,
-                        }
-
-                    },
-                    savedPost:{
-                        include: {
-                            savedPost: true,
-                        }
-                    },
-                    following: {
-                        include: {
-                            following: true,
-                        }
-                    }
-
-
-
-                }
-            })
-
-            if (!user) {
-                return res.status(404).json({ err: 'User not found' })
-            }
-
-
-            res.json({ ...user, })
-        } catch (error) {
-            console.error('Get current Error', error)
-            res.status(500).json({ error: 'err' })
-
-        }
-
-    },
+  
     updateUser: async (req, res) => {
         const { id } = req.params
         const { email, name, dateOfBirth, bio, location, avatarUrl } = req.body
@@ -158,6 +112,73 @@ const UserController = {
 
         }
     },
+    getUserById: async (req, res) => {
+        const { id } = req.params;
+        const userId = req.user.userId
+
+        try {
+            const user = await prisma.user.findUnique({
+                where: {
+                    id
+                },
+                include: {
+                    posts: {
+                        include: {
+                            comments: true,
+                            author: true,
+                            followers: true,
+                            savedBy:true,
+                        }
+
+                    },
+                    // savedPost:{
+                    //     include: {
+                    //         savedPost: true,
+                    //     }
+                    // },
+                    savedPost: {
+                        include: {
+                            savedPost: {
+                                include: {
+                                    savedBy: true, 
+                                    author: true,
+                                    comments: true, 
+                                }
+                            }
+                        }
+                    },
+                    following: {
+                        include: {
+                            following:{
+                                include: {
+                                    savedBy: true, 
+                                    author: true,
+                                    comments: true, 
+                                }
+                            }
+                            
+                        }
+                    }
+
+
+
+                }
+            })
+
+            if (!user) {
+                return res.status(404).json({ err: 'User not found' })
+            }
+
+
+            res.json({ ...user, })
+        } catch (error) {
+            console.error('Get current Error', error)
+            res.status(500).json({ error: 'err' })
+
+        }
+
+    },
+   
     current: async (req, res) => {
         try {
             const user = await prisma.user.findUnique({
@@ -165,17 +186,21 @@ const UserController = {
                 
                 include: {
                     posts: true,
-                    
+                   
                     following: {
                         include: {
                             following: true
                         }
                     },
-                    savedPost:{
-                        include: {
-                            savedPost: true,
-                        }
-                    },
+                    // savedPost:{
+                    //     include: {
+                    //         savedPost: true,
+                          
+                    //     }
+                    // },
+                    
+                   
+                   
 
 
                 }
@@ -184,6 +209,8 @@ const UserController = {
             if (!user) {
                 return res.status(400).json({ error: 'User not found.' })
             }
+           
+            
             res.json(user)
 
         } catch (error) {
