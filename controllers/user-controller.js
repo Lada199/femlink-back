@@ -74,7 +74,7 @@ const UserController = {
   
     updateUser: async (req, res) => {
         const { id } = req.params
-        const { email, name, dateOfBirth, bio, location, avatarUrl } = req.body
+        const { email, name, dateOfBirth, bio, fullName,  location, avatarUrl } = req.body
 
         let filePath
 
@@ -100,7 +100,8 @@ const UserController = {
                     avatarUrl: filePath ? `/${filePath}` : undefined,
                     dateOfBirth: dateOfBirth || undefined,
                     bio: bio || undefined,
-                    location: location || undefined
+                    location: location || undefined,
+                    fullName: fullName || undefined
 
                 }
             })
